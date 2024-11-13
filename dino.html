@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic Dinosaur Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        #game-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="300"></canvas>
+        <p>Press Space to Jump</p>
+        <p>Score: <span id="score">0</span></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        // Game variables
+        const dino = {
+            x: 50,
+            y: 200,
+            width: 40,
+            height: 60,
+            jumping: false,
+            velocityY: 0
+        };
+
+        let obstacles = [];
+        let score = 0;
+        let gameSpeed = 5;
+        const gravity = 0.5;
+        const jumpForce = -12;
+        let gameLoop;
+
+        // Game functions
+        function drawDino() {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+        }
+
+        function createObstacle() {
+            obstacles.push({
+                x: canvas.width,
+                y: 200,
+                width: 20,
+                height: 60
+            });
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function moveObstacles() {
+            obstacles = obstacles.filter(obstacle => {
+                obstacle.x -= gameSpeed;
+                return obstacle.x + obstacle.width > 0;
+            });
+        }
+
+        function jump() {
+            if (!dino.jumping) {
+                dino.jumping = true;
+                dino.velocityY = jumpForce;
+            }
+        }
+
+        function applyGravity() {
+            if (dino.jumping) {
+                dino.y += dino.velocityY;
+                dino.velocityY += gravity;
+
+                if (dino.y >= 200) {
+                    dino.y = 200;
+                    dino.jumping = false;
+                    dino.velocityY = 0;
+                }
+            }
+        }
+
+        function checkCollision() {
+            return obstacles.some(obstacle => 
+                dino.x < obstacle.x + obstacle.width &&
+                dino.x + dino.width > obstacle.x &&
+                dino.y < obstacle.y + obstacle.height &&
+                dino.y + dino.height > obstacle.y
+            );
+        }
+
+        function updateScore() {
+            score++;
+            scoreElement.textContent = score;
+            if (score % 100 === 0) {
+                gameSpeed += 0.5;
+            }
+        }
+
+        function gameOver() {
+            clearInterval(gameLoop);
+            ctx.fillStyle = 'black';
+            ctx.font = '48px Arial';
+            ctx.fillText('Game Over!', canvas.width/2 - 100, canvas.height/2);
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            applyGravity();
+            moveObstacles();
+            
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            
+            drawDino();
+            drawObstacles();
+            updateScore();
+        }
+
+        // Game initialization
+        function startGame() {
+            setInterval(createObstacle, 2000);
+            gameLoop = setInterval(update, 20);
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+                event.preventDefault();
+            }
+        });
+
+        // Start the game
+        startGame();
+    </script>
+</body>
+</html>

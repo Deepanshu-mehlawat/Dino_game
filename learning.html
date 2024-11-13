@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ball Collisions</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="200"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        class Ball {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.dx = (Math.random() - 0.5) * 4;
+                this.dy = (Math.random() - 0.5) * 4;
+                this.radius = 10;
+                this.mass = 1;  // Added for realistic collisions
+                this.color = color;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            move() {
+                // Bounce off walls
+                if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                    this.dx = -this.dx;
+                }
+                if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+                    this.dy = -this.dy;
+                }
+
+                // Update position
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+        }
+
+        function checkCollision(ball1, ball2) {
+            const dx = ball2.x - ball1.x;
+            const dy = ball2.y - ball1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < ball1.radius + ball2.radius) {
+                // Collision detected
+                resolveCollision(ball1, ball2);
+            }
+        }
+
+        function resolveCollision(ball1, ball2) {
+            // Get the normal and tangent vectors
+            const dx = ball2.x - ball1.x;
+            const dy = ball2.y - ball1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Normal vector
+            const nx = dx / distance;
+            const ny = dy / distance;
+            
+            // Tangent vector
+            const tx = -ny;
+            const ty = nx;
+            
+            // Dot product tangent
+            const dpTan1 = ball1.dx * tx + ball1.dy * ty;
+            const dpTan2 = ball2.dx * tx + ball2.dy * ty;
+            
+            // Dot product normal
+            const dpNorm1 = ball1.dx * nx + ball1.dy * ny;
+            const dpNorm2 = ball2.dx * nx + ball2.dy * ny;
+            
+            // Conservation of momentum in 1D
+            const m1 = (dpNorm1 * (ball1.mass - ball2.mass) + 2 * ball2.mass * dpNorm2) 
+                        / (ball1.mass + ball2.mass);
+            const m2 = (dpNorm2 * (ball2.mass - ball1.mass) + 2 * ball1.mass * dpNorm1) 
+                        / (ball1.mass + ball2.mass);
+            
+            // Update velocities
+            ball1.dx = tx * dpTan1 + nx * m1;
+            ball1.dy = ty * dpTan1 + ny * m1;
+            ball2.dx = tx * dpTan2 + nx * m2;
+            ball2.dy = ty * dpTan2 + ny * m2;
+        }
+
+        const balls = [
+            new Ball(100, 100, 'red'),
+            new Ball(200, 100, 'blue'),
+            new Ball(150, 150, 'green')
+        ];
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Check collisions between all pairs of balls
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    checkCollision(balls[i], balls[j]);
+                }
+            }
+
+            // Update and draw all balls
+            balls.forEach(ball => {
+                ball.move();
+                ball.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
