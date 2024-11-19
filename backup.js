@@ -23,8 +23,6 @@ var gameOver = false;
 var scoreText;
 var gameOverText;
 var lastObstacleX = 800; // Track the x position of the last obstacle
-var cactusSpeed = -1000; // Initial cactus speed
-var distanceTraveled = 0; // Track distance traveled for increasing speed
 
 function preload() {
     this.load.spritesheet('dino', 'assets/dino1.png', {
@@ -85,20 +83,10 @@ function create() {
     this.physics.add.collider(this.dino, this.obstacles, hitObstacle, null, this);
 }
 
-function update(time, delta) {
+function update() {
     if (!gameOver) {
         score += 0.05;  // Update score only if game is not over
         scoreText.setText('Score: ' + Math.floor(score));
-        
-        // Increase the distance traveled based on cactus speed
-        distanceTraveled += Math.abs(cactusSpeed) * (delta / 1000); // Adjust for delta time (in seconds)
-
-        // Every 20 units of distance, increase cactus speed by 10 units
-        //if (distanceTraveled >= 150) {
-        //    cactusSpeed -= 10; // Increase speed by 10 units
-          //  distanceTraveled = 0; // Reset distance counter for the next increment
-          //  console.log("New cactus speed: " + cactusSpeed);
-        //}
     }
 
     if (this.cursors.space.isDown && this.dino.body.touching.down) {
@@ -110,8 +98,8 @@ function spawnObstacle() {
     if (gameOver) return;
 
     // Minimum and maximum distances between obstacles
-    const minDistance = 20; // Minimum distance that guarantees a jump is possible
-    const maxDistance = 150; // Maximum distance for variety
+    const minDistance = 30; // Minimum distance that guarantees a jump is possible
+    const maxDistance = 40; // Maximum distance for variety
 
     // Calculate the x position for the new obstacle
     const distance = Phaser.Math.Between(minDistance, maxDistance);
@@ -130,7 +118,7 @@ function spawnObstacle() {
     obstacle.setImmovable(true);
 
     // Set horizontal velocity
-    obstacle.setVelocityX(cactusSpeed); // Use the dynamic cactus speed
+    obstacle.setVelocityX(-200);
 
     // Update lastObstacleX for the next spawn
     lastObstacleX = obstacleX;
